@@ -12,11 +12,11 @@ import chainer.links as L
 import os
 from PIL import Image
 import cPickle
-
-
+import xlrd
+import cv2
 #0サケ、１ブリ、２イワシ、３イカ、４マグロ
 
-gpu_flag = -1
+gpu_flag = 2
 
 if gpu_flag >= 0:
     cuda.check_cuda_available()
@@ -80,7 +80,8 @@ ans_data=[]
 gyosyu_list=[]
 
 
-for al in range(2):
+op=(1,3)
+for al1,al in enumerate(op):
     insert = 0
 
     print str(al)+"test.xls open"
@@ -94,7 +95,7 @@ for al in range(2):
                 for row in range(cell, cell+25):
                     test_list[0][col-7][row-cell]=int(sheet_1.cell(row, col).value)
             size = (25,165)
-            resize=cv2.resize(test_list,size[0], interpolation = cv2.INTER_CUBIC)
+            resize=cv2.resize(test_list[0],size, interpolation = cv2.INTER_CUBIC)
             all_data.append((resize,int(al)))
             #gyosyu_ans[al][count] = int(al)
             count+=1
@@ -126,7 +127,7 @@ for epoch in range(1, n_epoch + 1):
         val_batch_pool = [None] * val_batchsize
 
         for zz in range(val_batchsize):
-            path, label = alldata[count]
+            path, label = all_data[count]
             val_batch_pool[zz] = path
             val_x_batch[zz]=val_batch_pool[zz]
             val_y_batch[zz] = label
@@ -136,9 +137,9 @@ for epoch in range(1, n_epoch + 1):
 
         acc = forward(x_batch, y_batch, train=False)
         list = []
-
+        print acc.data
         for c in range(len(acc.data[0])):
-            list.append(acc.data[0][c])
+            list.append(acc.data[c])
         n_ans = 0
 
         #for idx, value in enumerate(list):
