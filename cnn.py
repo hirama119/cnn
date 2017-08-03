@@ -15,7 +15,7 @@ import cPickle
 import xlrd
 import cv2
 
-
+#0サケ、１ブリ、２イワシ、３イカ、４マグロ
 gpu_flag = -1
 
 if gpu_flag >= 0:
@@ -64,22 +64,6 @@ optimizer=optimizers.RMSpropGraves()
 optimizer.setup(model)
 start_time = time.clock()
 
-'''
-sake_list = np.ndarray((3799, 125, 25), dtype=np.int32)
-buri_list = np.ndarray((4600, 125, 25), dtype=np.int32)
-iwasi_list = np.ndarray((4600, 125, 25), dtype=np.int32)
-ika_list = np.ndarray((4600, 125, 25), dtype=np.int32)
-maguro_list = np.ndarray((4599, 125, 25), dtype=np.int32)
-
-sake_ans = np.ndarray(3799, dtype=np.int32)
-buri_ans = np.ndarray(4600, dtype=np.int32)
-iwasi_ans = np.ndarray(4600, dtype=np.int32)
-ika_ans = np.ndarray(4600, dtype=np.int32)
-maguro_ans = np.ndarray(4599, dtype=np.int32)
-
-gyosyu_list=[sake_list,buri_list,iwasi_list,ika_list,maguro_list]
-gyosyu_ans=[sake_ans,buri_ans,iwasi_ans,ika_ans,maguro_ans]
-'''
 
 count =0
 error=0
