@@ -13,10 +13,11 @@ import os
 from PIL import Image
 import cPickle
 import xlrd
-import cv2
+import sys
 
-#0サケ、１ブリ、２イワシ、３イカ、４マグロ
-gpu_flag = -1
+argvs=sys.argv
+print argvs[1],argvs[2]
+gpu_flag = 2
 
 if gpu_flag >= 0:
     cuda.check_cuda_available()
@@ -25,18 +26,17 @@ xp = cuda.cupy if gpu_flag >= 0 else np
 batchsize = 13
 val_batchsize = 6
 n_epoch = 20
-gyosyu=5
 
 
-tate = 165
+tate = 125
 yoko = 25
 
-model = chainer.FunctionSet(conv1=L.Convolution2D(1,  40, 2),
-                            conv2=L.Convolution2D(40, 20,  2),
-                            fc6=L.Linear(4000, 2048),
-                            fc7=L.Linear(2048, 512),
-                            fc8=L.Linear(512, 5),
-                            )
+model = chainer.FunctionSet(conv1=L.Convolution2D(1, 20, 2),
+                            conv2=L.Convolution2D(20, 10, 3),
+                            fc6=L.Linear(1500, 512),
+                            fc7=L.Linear(512, 208),
+                            fc8=L.Linear(208, 5),
+                             )
 
 if gpu_flag >= 0:
     cuda.get_device(gpu_flag).use()
@@ -45,10 +45,8 @@ if gpu_flag >= 0:
 
 def forward(x_data, y_data, train=True):
     x, t = chainer.Variable(x_data), chainer.Variable(y_data)
-    h = F.max_pooling_2d(F.relu(
-        F.local_response_normalization(model.conv1(x))), 2,stride=2)
-    h = F.max_pooling_2d(F.relu(
-        F.local_response_normalization(model.conv2(h))), 3,stride=2)
+    h = F.max_pooling_2d(F.relu(F.local_response_normalization(model.conv1(x))), 2, stride=2)
+    h = F.max_pooling_2d(F.relu(F.local_response_normalization(model.conv2(h))), 2, stride=2)
     h = F.dropout(F.relu(model.fc6(h)))
     h = F.dropout(F.relu(model.fc7(h)))
     h = model.fc8(h)
@@ -60,10 +58,26 @@ def forward(x_data, y_data, train=True):
         return F.accuracy(h, t)
 
 
-optimizer=optimizers.RMSpropGraves()
+optimizer=optimizers.AdaGrad()
 optimizer.setup(model)
 start_time = time.clock()
 
+'''
+sake_list = np.ndarray((3799, 125, 25), dtype=np.int32)
+buri_list = np.ndarray((4600, 125, 25), dtype=np.int32)
+iwasi_list = np.ndarray((4600, 125, 25), dtype=np.int32)
+ika_list = np.ndarray((4600, 125, 25), dtype=np.int32)
+maguro_list = np.ndarray((4599, 125, 25), dtype=np.int32)
+
+sake_ans = np.ndarray(3799, dtype=np.int32)
+buri_ans = np.ndarray(4600, dtype=np.int32)
+iwasi_ans = np.ndarray(4600, dtype=np.int32)
+ika_ans = np.ndarray(4600, dtype=np.int32)
+maguro_ans = np.ndarray(4599, dtype=np.int32)
+
+gyosyu_list=[sake_list,buri_list,iwasi_list,ika_list,maguro_list]
+gyosyu_ans=[sake_ans,buri_ans,iwasi_ans,ika_ans,maguro_ans]
+'''
 
 count =0
 error=0
@@ -76,8 +90,7 @@ ans_data=[]
 
 train_data=[]
 val_data=[]
-gyosyu_list=[]
-
+gyosyu=5
 for al in range(gyosyu):
     insert = 0
 
@@ -85,15 +98,12 @@ for al in range(gyosyu):
     book = xlrd.open_workbook(str(al)+'.xls')
     sheet_1 = book.sheet_by_index(0)
     for cell in range(4600):
-        test_list = np.ndarray((1,125, 25), dtype=np.uint8)
+        test_list = np.ndarray((125, 25), dtype=np.float32)
         if int(sheet_1.cell(cell, 0).value)>insert:
             for row in range(cell, cell+25):
                 for col in range(7, 132):
-                    test_list[0][col-7][row-cell]=float(sheet_1.cell(row, col).value)
-
-            size = (25, 165)
-            resize = cv2.resize(test_list[0], size, interpolation=cv2.INTER_CUBIC)
-            all_data.append((resize,int(al)))
+                    test_list[col-7][row-cell]=float(sheet_1.cell(row, col).value)
+            all_data.append((test_list,int(al)))
             #print test_list,al
             #break
             count+=1
@@ -101,23 +111,13 @@ for al in range(gyosyu):
             error+=1
 
         insert=int(sheet_1.cell(cell, 0).value)
-
-    gyosyu_list.append(int(count))
     count=0
     error=0
 
 np.random.seed(100)#シード値固定
-perm=[0]*gyosyu
-#gyosyu_list=[3799,4600,4600,4600,4599]
-#up=[0,3799,8399,12999,17599]
-
-up=[]
-upp=0
-for g in range(gyosyu):
-    up.append(upp)
-    upp=upp+gyosyu_list[g]
-
-
+perm=[0,0,0,0,0]
+gyosyu_list=[3799,4600,4600,4600,4599]
+up=[0,3799,8399,12999,17599]
 for pe in range(gyosyu):#各魚種のデータ数に応じた乱数作成
 #    perm[pe] = np.random.permutation(gyosyu_list[pe])
     perm[pe] = np.arange(gyosyu_list[pe])
@@ -138,8 +138,8 @@ N_test = len(val_data)
 print N,N_test,len(all_data)
 
 
-fp1 = open("accuracy.txt", "w")
-fp2 = open("loss.txt", "w")
+fp1 = open(str(argvs[1])+str(argvs[2])+"accuracy.txt", "w")
+fp2 = open(str(argvs[1])+str(argvs[2])+"loss.txt", "w")
 fp1.write("epoch\ttest_accuracy\n")
 fp2.write("epoch\ttrain_loss\n")
 #np.random.shuffle(all_data)
