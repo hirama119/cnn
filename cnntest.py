@@ -1,8 +1,12 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 # coding: utf-8
 =======
 #coding: utf-8
 >>>>>>> 6f804c952fd3a869a45b3416636c33c249f0c62e
+=======
+#coding: utf-8
+>>>>>>> 9316e2f5cc21765b5c44f38aa3dd82a7c5cb8b6d
 import numpy as np
 import chainer
 from chainer import cuda
@@ -17,6 +21,7 @@ import os
 from PIL import Image
 import cPickle
 <<<<<<< HEAD
+<<<<<<< HEAD
 import xlrd
 
 gpu_flag = 3
@@ -27,11 +32,19 @@ gpu_flag = 3
 
 gpu_flag = -1
 >>>>>>> 6f804c952fd3a869a45b3416636c33c249f0c62e
+=======
+import xlrd
+import cv2
+#0サケ、１ブリ、２イワシ、３イカ、４マグロ
+
+gpu_flag = -1
+>>>>>>> 9316e2f5cc21765b5c44f38aa3dd82a7c5cb8b6d
 
 if gpu_flag >= 0:
     cuda.check_cuda_available()
 xp = cuda.cupy if gpu_flag >= 0 else np
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 batchsize = 13
 val_batchsize = 6
@@ -43,6 +56,8 @@ yoko = 25
 with open('RMSpropGraves_model.pkl','rb') as i:
     model=cPickle.load(i)
 =======
+=======
+>>>>>>> 9316e2f5cc21765b5c44f38aa3dd82a7c5cb8b6d
 val_batchsize=1
 n_epoch = 1
 tate=165
@@ -61,12 +76,16 @@ with open('model.pkl', 'rb') as i:
 # plt.imshow(X_train[1][0], cmap=pylab.cm.gray_r, interpolation='nearest')
 # plt.show()
 #, stride=1,pad=2
+<<<<<<< HEAD
 >>>>>>> 6f804c952fd3a869a45b3416636c33c249f0c62e
+=======
+>>>>>>> 9316e2f5cc21765b5c44f38aa3dd82a7c5cb8b6d
 
 if gpu_flag >= 0:
     cuda.get_device(gpu_flag).use()
     model.to_gpu()
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 
 def forward(x_data, y_data, train=True):
@@ -74,13 +93,18 @@ def forward(x_data, y_data, train=True):
     h = F.max_pooling_2d(F.relu(F.local_response_normalization(model.conv1(x))), 2, stride=2)
     h = F.max_pooling_2d(F.relu(F.local_response_normalization(model.conv2(h))), 3, stride=2)
 =======
+=======
+>>>>>>> 9316e2f5cc21765b5c44f38aa3dd82a7c5cb8b6d
 def forward(x_data, y_data, train=True):
     x, t = chainer.Variable(x_data), chainer.Variable(y_data)
     h = F.max_pooling_2d(F.relu(
         F.local_response_normalization(model.conv1(x))), 2,stride=2)
     h = F.max_pooling_2d(F.relu(
         F.local_response_normalization(model.conv2(h))), 3,stride=2)
+<<<<<<< HEAD
 >>>>>>> 6f804c952fd3a869a45b3416636c33c249f0c62e
+=======
+>>>>>>> 9316e2f5cc21765b5c44f38aa3dd82a7c5cb8b6d
     h = F.dropout(F.relu(model.fc6(h)))
     h = F.dropout(F.relu(model.fc7(h)))
     h = model.fc8(h)
@@ -89,6 +113,7 @@ def forward(x_data, y_data, train=True):
         return F.softmax_cross_entropy(h, t)
 
     else:
+<<<<<<< HEAD
 <<<<<<< HEAD
         return h
 
@@ -233,6 +258,10 @@ for epoch in range(1, n_epoch + 1):
 =======
         return F.accuracy(h, t)
 
+=======
+        return h
+
+>>>>>>> 9316e2f5cc21765b5c44f38aa3dd82a7c5cb8b6d
 optimizer = optimizers.Adam()
 optimizer.setup(model)
 
@@ -252,11 +281,20 @@ ans_data=[]
 gyosyu_list=[]
 
 
+<<<<<<< HEAD
 for al in range(2):
     insert = 0
 
     print str(al)+"test.xls open"
     book = xlrd.open_workbook(str(al)+'test.xls')
+=======
+op=(1,3)
+for al1,al in enumerate(op):
+    insert = 0
+
+    print str(al)+"test.xls open"
+    book = xlrd.open_workbook(str(al)+'.xls')
+>>>>>>> 9316e2f5cc21765b5c44f38aa3dd82a7c5cb8b6d
     sheet_1 = book.sheet_by_index(0)
     for cell in range(4600):
         test_list = np.ndarray((1,125, 25), dtype=np.uint8)
@@ -266,7 +304,11 @@ for al in range(2):
                 for row in range(cell, cell+25):
                     test_list[0][col-7][row-cell]=int(sheet_1.cell(row, col).value)
             size = (25,165)
+<<<<<<< HEAD
             resize=cv2.resize(test_list,size[0], interpolation = cv2.INTER_CUBIC)
+=======
+            resize=cv2.resize(test_list[0],size, interpolation = cv2.INTER_CUBIC)
+>>>>>>> 9316e2f5cc21765b5c44f38aa3dd82a7c5cb8b6d
             all_data.append((resize,int(al)))
             #gyosyu_ans[al][count] = int(al)
             count+=1
@@ -297,17 +339,26 @@ for epoch in range(1, n_epoch + 1):
         val_y_batch = np.ndarray((val_batchsize,), dtype=np.int32)
         val_batch_pool = [None] * val_batchsize
 
+<<<<<<< HEAD
         for zz in range(val_batchsize):
             path, label = alldata[count]
             val_batch_pool[zz] = path
             val_x_batch[zz]=val_batch_pool[zz]
             val_y_batch[zz] = label
             count+=1
+=======
+        path, label = all_data[count]
+        val_batch_pool = path
+        val_x_batch = val_batch_pool
+        val_y_batch = label
+        count+=1
+>>>>>>> 9316e2f5cc21765b5c44f38aa3dd82a7c5cb8b6d
         x_batch = xp.asarray(val_x_batch)
         y_batch = xp.asarray(val_y_batch)
 
         acc = forward(x_batch, y_batch, train=False)
         list = []
+<<<<<<< HEAD
 
         for c in range(len(acc.data[0])):
             list.append(acc.data[0][c])
@@ -357,11 +408,30 @@ for epoch in range(1, n_epoch + 1):
         '''
         fg[y_batch][n_ans] = fg[y_batch][n_ans] + 1  # visibledeprecationwarning とでるが、intにfloatがはいっている？ということらしい
         if y_batch!=n_ans:
+=======
+        print acc.data
+        for c in range(len(acc.data[0])):
+            list.append(acc.data[c])
+        n_ans = 0
+
+        for idx, value in enumerate(list):
+            if value == max(list):
+                n_ans = idx
+
+
+
+        fg[label][n_ans] = fg[label][n_ans] + 1  # visibledeprecationwarning とでるが、intにfloatがはいっている？ということらしい
+        if label!=n_ans:
+>>>>>>> 9316e2f5cc21765b5c44f38aa3dd82a7c5cb8b6d
             fp1.write(str(n_ans))
             fp1.write(",")
             fp1.write(str(val_list[count-1]))
             fp1.write("\n")
+<<<<<<< HEAD
         '''
+=======
+
+>>>>>>> 9316e2f5cc21765b5c44f38aa3dd82a7c5cb8b6d
 
         # f[n_ans] = f[n_ans] + 1
     print "buri maguro ika iwasi sake"
@@ -381,5 +451,8 @@ buri.close()
 iwasi.close()
 ika.close()
 maguro.close()
+<<<<<<< HEAD
 >>>>>>> 6f804c952fd3a869a45b3416636c33c249f0c62e
+=======
+>>>>>>> 9316e2f5cc21765b5c44f38aa3dd82a7c5cb8b6d
 
