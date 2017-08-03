@@ -16,7 +16,7 @@ import xlrd
 import cv2
 #0サケ、１ブリ、２イワシ、３イカ、４マグロ
 
-gpu_flag = 2
+gpu_flag = -1
 
 if gpu_flag >= 0:
     cuda.check_cuda_available()
@@ -59,7 +59,7 @@ def forward(x_data, y_data, train=True):
         return F.softmax_cross_entropy(h, t)
 
     else:
-        return F.accuracy(h, t)
+        return h
 
 optimizer = optimizers.Adam()
 optimizer.setup(model)
@@ -85,7 +85,7 @@ for al1,al in enumerate(op):
     insert = 0
 
     print str(al)+"test.xls open"
-    book = xlrd.open_workbook(str(al)+'test.xls')
+    book = xlrd.open_workbook(str(al)+'.xls')
     sheet_1 = book.sheet_by_index(0)
     for cell in range(4600):
         test_list = np.ndarray((1,125, 25), dtype=np.uint8)
@@ -126,12 +126,11 @@ for epoch in range(1, n_epoch + 1):
         val_y_batch = np.ndarray((val_batchsize,), dtype=np.int32)
         val_batch_pool = [None] * val_batchsize
 
-        for zz in range(val_batchsize):
-            path, label = all_data[count]
-            val_batch_pool[zz] = path
-            val_x_batch[zz]=val_batch_pool[zz]
-            val_y_batch[zz] = label
-            count+=1
+        path, label = all_data[count]
+        val_batch_pool = path
+        val_x_batch = val_batch_pool
+        val_y_batch = label
+        count+=1
         x_batch = xp.asarray(val_x_batch)
         y_batch = xp.asarray(val_y_batch)
 
@@ -142,55 +141,19 @@ for epoch in range(1, n_epoch + 1):
             list.append(acc.data[c])
         n_ans = 0
 
-        #for idx, value in enumerate(list):
-            #if value == max(list):
-                #n_ans = idx
-        if y_batch == 0:
-            for i in range(5):
-                buri.write(str(list[i]))
-                buri.write(",")
-            buri.write("\n")
-            buri.flush()
-
-        if y_batch == 1:
-            for i in range(5):
-                maguro.write(str(list[i]))
-                maguro.write(",")
-            maguro.write("\n")
-            maguro.flush()
-
-
-        if y_batch == 2:
-            for i in range(5):
-                ika.write(str(list[i]))
-                ika.write(",")
-            ika.write("\n")
-            ika.flush()
-
-        if y_batch == 3:
-            for i in range(5):
-                iwasi.write(str(list[i]))
-                iwasi.write(",")
-            iwasi.write("\n")
-            iwasi.flush()
-
-        if y_batch == 4:
-            for i in range(5):
-                sake.write(str(list[i]))
-                sake.write(",")
-            sake.write("\n")
-            sake.flush()
+        for idx, value in enumerate(list):
+            if value == max(list):
+                n_ans = idx
 
 
 
-        '''
-        fg[y_batch][n_ans] = fg[y_batch][n_ans] + 1  # visibledeprecationwarning とでるが、intにfloatがはいっている？ということらしい
-        if y_batch!=n_ans:
+        fg[label][n_ans] = fg[label][n_ans] + 1  # visibledeprecationwarning とでるが、intにfloatがはいっている？ということらしい
+        if label!=n_ans:
             fp1.write(str(n_ans))
             fp1.write(",")
             fp1.write(str(val_list[count-1]))
             fp1.write("\n")
-        '''
+
 
         # f[n_ans] = f[n_ans] + 1
     print "buri maguro ika iwasi sake"
