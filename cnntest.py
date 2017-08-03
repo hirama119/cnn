@@ -72,7 +72,7 @@ if gpu_flag >= 0:
 def forward(x_data, y_data, train=True):
     x, t = chainer.Variable(x_data), chainer.Variable(y_data)
     h = F.max_pooling_2d(F.relu(F.local_response_normalization(model.conv1(x))), 2, stride=2)
-    h = F.max_pooling_2d(F.relu(F.local_response_normalization(model.conv2(h))), 2, stride=2)
+    h = F.max_pooling_2d(F.relu(F.local_response_normalization(model.conv2(h))), 3, stride=2)
 =======
 def forward(x_data, y_data, train=True):
     x, t = chainer.Variable(x_data), chainer.Variable(y_data)
