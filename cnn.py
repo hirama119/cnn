@@ -15,7 +15,7 @@ import cPickle
 import cv2
 
 #0サケ、１ブリ、２イワシ、３イカ、４マグロ
-gpu_flag = -1
+gpu_flag = 0
 
 if gpu_flag >= 0:
     cuda.check_cuda_available()
@@ -213,6 +213,11 @@ for epoch in range(1, n_epoch + 1):
 #fp3.close()
 fp1.close()
 fp2.close()
+
+        # CPU環境でも学習済みモデルを読み込めるようにCPUに移してからダンプ
+model.to_cpu()
+cPickle.dump(model, open("model.pkl", "wb"), -1)
+
 '''
 if __name__ == "__main__":
             fp1 = open(str(modelname1[h])+str(i)+"accuracy.txt", "w")
