@@ -12,7 +12,6 @@ import chainer.links as L
 import os
 from PIL import Image
 import cPickle
-import xlrd
 import cv2
 
 #0サケ、１ブリ、２イワシ、３イカ、４マグロ
@@ -81,15 +80,14 @@ gyosyu_list=[]
 for al in range(gyosyu):
     insert = 0
 
-    print str(al)+".xls open"
-    book = xlrd.open_workbook(str(al)+'.xls')
-    sheet_1 = book.sheet_by_index(0)
+    print str(al)+".csv open"
+    data = np.genfromtxt(str(al)+".csv", delimiter=",", dtype=np.int32)
     for cell in range(4600):
         test_list = np.ndarray((1,125, 25), dtype=np.uint8)
-        if int(sheet_1.cell(cell, 0).value)>insert:
+        if int(data[cell, 0])>insert:
             for row in range(cell, cell+25):
                 for col in range(7, 132):
-                    test_list[0][col-7][row-cell]=float(sheet_1.cell(row, col).value)
+                    test_list[0][col-7][row-cell]=float(data[row, col])
 
             size = (25, 165)
             resize = cv2.resize(test_list[0], size, interpolation=cv2.INTER_CUBIC)
@@ -100,7 +98,7 @@ for al in range(gyosyu):
         else:
             error+=1
 
-        insert=int(sheet_1.cell(cell, 0).value)
+        insert=int(data[cell, 0])
 
     gyosyu_list.append(int(count))
     count=0
