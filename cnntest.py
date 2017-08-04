@@ -12,6 +12,7 @@ import chainer.links as L
 import os
 from PIL import Image
 import cPickle
+import cv2
 
 
 #0サケ、１ブリ、２イワシ、３イカ、４マグロ
@@ -61,7 +62,7 @@ def forward(x_data, y_data, train=True):
     else:
         return F.accuracy(h, t)
 
-optimizer = optimizers.Adam()
+optimizer=optimizers.RMSpropGraves()
 optimizer.setup(model)
 
 #fp1 = open("miss.txt", "w")
@@ -79,34 +80,33 @@ all_data=[]
 ans_data=[]
 gyosyu_list=[]
 
-
-for al in range(2):
+up=[1,3]
+for al1,al in enumerate(up):
     insert = 0
 
-    print str(al)+"test.xls open"
-    book = xlrd.open_workbook(str(al)+'test.xls')
-    sheet_1 = book.sheet_by_index(0)
+    print str(al) + "test.csv open"
+    data = np.genfromtxt(str(al) + "test.csv", delimiter=",", dtype=np.int32)
     for cell in range(4600):
-        test_list = np.ndarray((1,125, 25), dtype=np.uint8)
+        test_list = np.ndarray((1, 125, 25), dtype=np.uint8)
+        if int(data[cell, 0]) > insert:
+            for row in range(cell, cell + 25):
+                for col in range(7, 132):
+                    test_list[0][col - 7][row - cell] = float(data[row, col])
 
-        if int(sheet_1.cell(cell, 0).value)>insert:
-            for col in range(7, 132):
-                for row in range(cell, cell+25):
-                    test_list[0][col-7][row-cell]=int(sheet_1.cell(row, col).value)
-            size = (25,165)
-            resize=cv2.resize(test_list,size[0], interpolation = cv2.INTER_CUBIC)
-            all_data.append((resize,int(al)))
-            #gyosyu_ans[al][count] = int(al)
-            count+=1
+            size = (25, 165)
+            resize = cv2.resize(test_list[0], size, interpolation=cv2.INTER_CUBIC)
+            all_data.append((resize, int(al)))
+            # print test_list,al
+            # break
+            count += 1
         else:
-            error+=1
-        insert=int(sheet_1.cell(cell, 0).value)
-    print count,error
+            error += 1
+
+        insert = int(data[cell, 0])
+
     gyosyu_list.append(int(count))
-    count=0
-    error=0
-
-
+    count = 0
+    error = 0
 
 N_test = gyosyu_list[0]+gyosyu_list[1]
 
@@ -126,7 +126,7 @@ for epoch in range(1, n_epoch + 1):
         val_batch_pool = [None] * val_batchsize
 
         for zz in range(val_batchsize):
-            path, label = alldata[count]
+            path, label = all_data[count]
             val_batch_pool[zz] = path
             val_x_batch[zz]=val_batch_pool[zz]
             val_y_batch[zz] = label
@@ -141,55 +141,19 @@ for epoch in range(1, n_epoch + 1):
             list.append(acc.data[0][c])
         n_ans = 0
 
-        #for idx, value in enumerate(list):
-            #if value == max(list):
-                #n_ans = idx
-        if y_batch == 0:
-            for i in range(5):
-                buri.write(str(list[i]))
-                buri.write(",")
-            buri.write("\n")
-            buri.flush()
-
-        if y_batch == 1:
-            for i in range(5):
-                maguro.write(str(list[i]))
-                maguro.write(",")
-            maguro.write("\n")
-            maguro.flush()
-
-
-        if y_batch == 2:
-            for i in range(5):
-                ika.write(str(list[i]))
-                ika.write(",")
-            ika.write("\n")
-            ika.flush()
-
-        if y_batch == 3:
-            for i in range(5):
-                iwasi.write(str(list[i]))
-                iwasi.write(",")
-            iwasi.write("\n")
-            iwasi.flush()
-
-        if y_batch == 4:
-            for i in range(5):
-                sake.write(str(list[i]))
-                sake.write(",")
-            sake.write("\n")
-            sake.flush()
+        for idx, value in enumerate(list):
+            if value == max(list):
+                n_ans = idx
 
 
 
-        '''
         fg[y_batch][n_ans] = fg[y_batch][n_ans] + 1  # visibledeprecationwarning とでるが、intにfloatがはいっている？ということらしい
         if y_batch!=n_ans:
             fp1.write(str(n_ans))
             fp1.write(",")
             fp1.write(str(val_list[count-1]))
             fp1.write("\n")
-        '''
+
 
         # f[n_ans] = f[n_ans] + 1
     print "buri maguro ika iwasi sake"
@@ -203,10 +167,6 @@ for epoch in range(1, n_epoch + 1):
 end_time = time.clock()
 print end_time - start_time
 
-#fp1.close()
-sake.close()
-buri.close()
-iwasi.close()
-ika.close()
-maguro.close()
+fp1.close()
+
 
