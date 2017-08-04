@@ -17,7 +17,7 @@ import cv2
 
 #0サケ、１ブリ、２イワシ、３イカ、４マグロ
 
-gpu_flag = -1
+gpu_flag = 0
 
 if gpu_flag >= 0:
     cuda.check_cuda_available()
@@ -60,12 +60,12 @@ def forward(x_data, y_data, train=True):
         return F.softmax_cross_entropy(h, t)
 
     else:
-        return F.accuracy(h, t)
+        return h
 
 optimizer=optimizers.RMSpropGraves()
 optimizer.setup(model)
 
-#fp1 = open("miss.txt", "w")
+fp1 = open("miss.txt", "w")
 
 fg = [[0 for i in range(5)] for j in range(5)]
 
@@ -109,7 +109,7 @@ for al1,al in enumerate(up):
     error = 0
 
 N_test = gyosyu_list[0]+gyosyu_list[1]
-
+print N_test
 for epoch in range(1, n_epoch + 1):
 
 
@@ -119,7 +119,8 @@ for epoch in range(1, n_epoch + 1):
 
     sum_accuracy = 0
     for i in range(0, N_test, val_batchsize):
-        print i
+        if i%1000==0:
+            print i
         val_x_batch = np.ndarray(
             (val_batchsize, 1, tate, yoko), dtype=np.float32)
         val_y_batch = np.ndarray((val_batchsize,), dtype=np.int32)
@@ -147,17 +148,17 @@ for epoch in range(1, n_epoch + 1):
 
 
 
-        fg[y_batch][n_ans] = fg[y_batch][n_ans] + 1  # visibledeprecationwarning とでるが、intにfloatがはいっている？ということらしい
-        if y_batch!=n_ans:
-            fp1.write(str(n_ans))
-            fp1.write(",")
-            fp1.write(str(val_list[count-1]))
-            fp1.write("\n")
+        fg[label][n_ans] = fg[label][n_ans] + 1  # visibledeprecationwarning とでるが、intにfloatがはいっている？ということらしい
+       # if label!=n_ans:
+        #    fp1.write(str(n_ans))
+        #    fp1.write(",")
+        #    fp1.write(str(val_list[count-1]))
+        #    fp1.write("\n")
 
 
         # f[n_ans] = f[n_ans] + 1
     print "buri maguro ika iwasi sake"
-    #print fg
+    print fg
     #fp1.write(str(fg))
     #fp1.flush()
     count=0
