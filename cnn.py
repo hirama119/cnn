@@ -24,7 +24,7 @@ xp = cuda.cupy if gpu_flag >= 0 else np
 batchsize = 13
 val_batchsize = 6
 n_epoch = 20
-gyosyu=5
+gyosyu=1
 
 
 tate = 165
@@ -42,6 +42,13 @@ if gpu_flag >= 0:
     model.to_gpu()
 
 
+def softmax(a):
+    exp_a = np.exp(a)
+    sum_exp_a = np.sum(exp_a)
+    y = exp_a / sum_exp_a
+    print y
+    return y
+
 def forward(x_data, y_data, train=True):
     x, t = chainer.Variable(x_data), chainer.Variable(y_data)
     h = F.max_pooling_2d(F.relu(
@@ -56,7 +63,7 @@ def forward(x_data, y_data, train=True):
         return F.softmax_cross_entropy(h, t)
 
     else:
-        return F.accuracy(h, t)
+        return softmax(h)#F.accuracy(h, t)
 
 
 optimizer=optimizers.RMSpropGraves()
