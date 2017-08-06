@@ -27,7 +27,7 @@ val_batchsize=1
 n_epoch = 1
 tate=165
 yoko=25
-with open('model.pkl', 'rb') as i:
+with open('ikahenkoumodel.pkl', 'rb') as i:
     model = cPickle.load(i)
 
 # ピクセルの値を0.0-1.0に正規化
@@ -52,8 +52,8 @@ def forward(x_data, y_data, train=True):
         F.local_response_normalization(model.conv1(x))), 2,stride=2)
     h = F.max_pooling_2d(F.relu(
         F.local_response_normalization(model.conv2(h))), 3,stride=2)
-    h = F.dropout(F.relu(model.fc6(h)))
-    h = F.dropout(F.relu(model.fc7(h)))
+    h = F.relu(model.fc6(h))
+    h = F.relu(model.fc7(h))
     h = model.fc8(h)
     if train:
 
@@ -67,7 +67,6 @@ optimizer.setup(model)
 
 fp1 = open("miss.txt", "w")
 
-fg = [[0 for i in range(5)] for j in range(5)]
 
 
 # 訓練ループ
@@ -106,11 +105,11 @@ for al1,al in enumerate(up):
     count = 0
     error = 0
 
-up=[(921,1)]
+up=[(921,1),(916,1),(107,1),(1011,1),(1017,1)]
 for al1,al in enumerate(up):
     insert = 0
 
-    print str(al) + ".csv open"
+    print str(al[0]) + ".csv open"
     data = np.genfromtxt(str(al[0]) + ".csv", delimiter=",", dtype=np.int32)
     for cell in range(4600):
         test_list = np.ndarray((1,125, 25), dtype=np.uint8)
@@ -132,17 +131,21 @@ for al1,al in enumerate(up):
     gyosyu_list.append(int(count))
     count = 0
     error = 0
+
+datasu=len(gyosyu_list)
+print gyosyu_list
 N_test = sum(gyosyu_list)
 print N_test
-for epoch in range(1, n_epoch + 1):
+for epoch in range(datasu):
 
 
     print "epoch: %d" % epoch
 
-    count=0
 
     sum_accuracy = 0
-    for i in range(0, N_test, val_batchsize):
+    sumtest=gyosyu_list[epoch]
+    fg = [[0 for i in range(5)] for j in range(5)]
+    for i in range(sumtest):
         if i%1000==0:
             print i
         val_x_batch = np.ndarray(
@@ -186,7 +189,6 @@ for epoch in range(1, n_epoch + 1):
     print fg
     #fp1.write(str(fg))
     #fp1.flush()
-    count=0
 
 
 
