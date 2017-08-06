@@ -80,12 +80,12 @@ all_data=[]
 ans_data=[]
 gyosyu_list=[]
 
-up=[1,3]
+up=[]
 for al1,al in enumerate(up):
     insert = 0
 
     print str(al) + "test.csv open"
-    data = np.genfromtxt(str(al) + "test.csv", delimiter=",", dtype=np.int32)
+    data = np.genfromtxt(str(al[0]) + "test.csv", delimiter=",", dtype=np.int32)
     for cell in range(4600):
         test_list = np.ndarray((165, 25), dtype=np.int32)
         if int(data[cell, 0]) > insert:
@@ -93,7 +93,7 @@ for al1,al in enumerate(up):
                 for col in range(7, 172):
                     test_list[col - 7][row - cell] = float(data[row, col])
 
-            all_data.append((test_list, int(al)))
+            all_data.append((test_list, int(al[1])))
             # print test_list,al
             # break
             count += 1
@@ -106,7 +106,33 @@ for al1,al in enumerate(up):
     count = 0
     error = 0
 
-N_test = gyosyu_list[0]+gyosyu_list[1]
+up=[(921,1)]
+for al1,al in enumerate(up):
+    insert = 0
+
+    print str(al) + ".csv open"
+    data = np.genfromtxt(str(al[0]) + ".csv", delimiter=",", dtype=np.int32)
+    for cell in range(4600):
+        test_list = np.ndarray((1,125, 25), dtype=np.uint8)
+        if int(data[cell, 0]) > insert:
+            for row in range(cell, cell + 25):
+                for col in range(7, 132):
+                    test_list[0][col - 7][row - cell] = float(data[row, col])
+            size = (25,165)
+            resize = cv2.resize(test_list[0],size,interpolation=cv2.INTER_CUBIC)
+            all_data.append((resize, int(al[1])))
+            # print test_list,al
+            # break
+            count += 1
+        else:
+            error += 1
+
+        insert = int(data[cell, 0])
+
+    gyosyu_list.append(int(count))
+    count = 0
+    error = 0
+N_test = sum(gyosyu_list)
 print N_test
 for epoch in range(1, n_epoch + 1):
 
@@ -156,7 +182,7 @@ for epoch in range(1, n_epoch + 1):
 
 
         # f[n_ans] = f[n_ans] + 1
-    print "buri maguro ika iwasi sake"
+    print "サケ ブリ イワシ イカ マグロ"
     print fg
     #fp1.write(str(fg))
     #fp1.flush()
