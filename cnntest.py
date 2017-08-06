@@ -87,15 +87,13 @@ for al1,al in enumerate(up):
     print str(al) + "test.csv open"
     data = np.genfromtxt(str(al) + "test.csv", delimiter=",", dtype=np.int32)
     for cell in range(4600):
-        test_list = np.ndarray((1, 125, 25), dtype=np.uint8)
+        test_list = np.ndarray((165, 25), dtype=np.int32)
         if int(data[cell, 0]) > insert:
             for row in range(cell, cell + 25):
-                for col in range(7, 132):
-                    test_list[0][col - 7][row - cell] = float(data[row, col])
+                for col in range(7, 172):
+                    test_list[col - 7][row - cell] = float(data[row, col])
 
-            size = (25, 165)
-            resize = cv2.resize(test_list[0], size, interpolation=cv2.INTER_CUBIC)
-            all_data.append((resize, int(al)))
+            all_data.append((test_list, int(al)))
             # print test_list,al
             # break
             count += 1
@@ -136,12 +134,13 @@ for epoch in range(1, n_epoch + 1):
         y_batch = xp.asarray(val_y_batch)
 
         acc = forward(x_batch, y_batch, train=False)
-        list = []
-
+        #list = np.ndarray(5,dtype=np.float16)
+        list=[]
         for c in range(len(acc.data[0])):
             list.append(acc.data[0][c])
         n_ans = 0
-
+       # print "list"
+       # print list
         for idx, value in enumerate(list):
             if value == max(list):
                 n_ans = idx
