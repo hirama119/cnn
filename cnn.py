@@ -21,10 +21,10 @@ if gpu_flag >= 0:
     cuda.check_cuda_available()
 xp = cuda.cupy if gpu_flag >= 0 else np
 
-batchsize = 13
-val_batchsize = 6
+batchsize = 6#13
+val_batchsize =10# 6
 n_epoch = 20
-gyosyu=1
+gyosyu=5
 
 
 tate = 165
@@ -42,12 +42,6 @@ if gpu_flag >= 0:
     model.to_gpu()
 
 
-def softmax(a):
-    exp_a = np.exp(a)
-    sum_exp_a = np.sum(exp_a)
-    y = exp_a / sum_exp_a
-    print y
-    return y
 
 def forward(x_data, y_data, train=True):
     x, t = chainer.Variable(x_data), chainer.Variable(y_data)
@@ -63,7 +57,7 @@ def forward(x_data, y_data, train=True):
         return F.softmax_cross_entropy(h, t)
 
     else:
-        return softmax(h)#F.accuracy(h, t)
+        return F.accuracy(h, t)
 
 
 optimizer=optimizers.RMSpropGraves()
@@ -87,6 +81,7 @@ gyosyu_list=[]
 for al in range(gyosyu):
     insert = 0
 
+
     print str(al)+".csv open"
     data = np.genfromtxt(str(al)+".csv", delimiter=",", dtype=np.int32)
     for cell in range(4600):
@@ -108,26 +103,51 @@ for al in range(gyosyu):
         insert=int(data[cell, 0])
 
     gyosyu_list.append(int(count))
+    print count,error
     count=0
     error=0
+for al in range(1,2):
+    print str(al)+"test.csv open"
+    data = np.genfromtxt(str(al)+"test.csv", delimiter=",", dtype=np.int32)
+    for cell in range(4600):
+        test_list = np.ndarray((1,165, 25), dtype=np.uint8)
+        test_list1 = np.ndarray((1,125, 25), dtype=np.uint8)
+        if int(data[cell, 0])>insert:
+            for row in range(cell, cell+25):
+                for col in range(7, 172):
+                    test_list[0][col-7][row-cell]=float(data[row, col])
 
+            all_data.append((test_list[0],int(al)))
+            #print test_list,al
+            #break
+
+            count+=1
+        else:
+            error+=1
+
+        insert=int(data[cell,0])
+    gyosyu_list.append(int(count))
+    print count,error
+    count =0
+    error=0
+print gyosyu_list
 np.random.seed(100)#シード値固定
-perm=[0]*gyosyu
+perm=[0]*(gyosyu+1)
 #gyosyu_list=[3799,4600,4600,4600,4599]
 #up=[0,3799,8399,12999,17599]
 
 up=[]
 upp=0
-for g in range(gyosyu):
+for g in range(gyosyu+1):
     up.append(upp)
     upp=upp+gyosyu_list[g]
 
 
-for pe in range(gyosyu):#各魚種のデータ数に応じた乱数作成
+for pe in range(gyosyu+1):#各魚種のデータ数に応じた乱数作成
 #    perm[pe] = np.random.permutation(gyosyu_list[pe])
     perm[pe] = np.arange(gyosyu_list[pe])
 
-for al in range(gyosyu):#データを8:２に分けてる
+for al in range(gyosyu+1):#データを8:２に分けてる
     indeces = [int(perm[al].size*n) for n in [0.6,0.6+0.2]]
     train, val,train1 = np.split(perm[al], indeces)
     for i,tra in enumerate(train):
