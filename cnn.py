@@ -21,11 +21,11 @@ if gpu_flag >= 0:
     cuda.check_cuda_available()
 xp = cuda.cupy if gpu_flag >= 0 else np
 
-batchsize = 6#13
-val_batchsize =10# 6
+batchsize = 13#6#13
+val_batchsize = 6#10# 6
 n_epoch = 20
 gyosyu=5
-
+datasu=0
 
 tate = 165
 yoko = 25
@@ -78,12 +78,13 @@ train_data=[]
 val_data=[]
 gyosyu_list=[]
 
-for al in range(gyosyu):
+train_list=[(0,0),(1,1),(2,2),(1123,3),(4,4)]
+for al1,al in enumerate(train_list):
     insert = 0
 
 
-    print str(al)+".csv open"
-    data = np.genfromtxt(str(al)+".csv", delimiter=",", dtype=np.int32)
+    print str(al[0])+".csv open"
+    data = np.genfromtxt(str(al[0])+".csv", delimiter=",", dtype=np.int32)
     for cell in range(4600):
         test_list = np.ndarray((1,125, 25), dtype=np.uint8)
         if int(data[cell, 0])>insert:
@@ -93,7 +94,7 @@ for al in range(gyosyu):
 
             size = (25, 165)
             resize = cv2.resize(test_list[0], size, interpolation=cv2.INTER_CUBIC)
-            all_data.append((resize,int(al)))
+            all_data.append((resize,int(al[1])))
             #print test_list,al
             #break
             count+=1
@@ -106,18 +107,19 @@ for al in range(gyosyu):
     print count,error
     count=0
     error=0
-for al in range(1,2):
-    print str(al)+"test.csv open"
-    data = np.genfromtxt(str(al)+"test.csv", delimiter=",", dtype=np.int32)
+
+files=[]
+for al1,al in enumerate(files):
+    print str(al[0])+"test.csv open"
+    data = np.genfromtxt(str(al[0])+"test.csv", delimiter=",", dtype=np.int32)
     for cell in range(4600):
         test_list = np.ndarray((1,165, 25), dtype=np.uint8)
-        test_list1 = np.ndarray((1,125, 25), dtype=np.uint8)
         if int(data[cell, 0])>insert:
             for row in range(cell, cell+25):
                 for col in range(7, 172):
                     test_list[0][col-7][row-cell]=float(data[row, col])
 
-            all_data.append((test_list[0],int(al)))
+            all_data.append((test_list[0],int(ali[1])))
             #print test_list,al
             #break
 
@@ -130,6 +132,9 @@ for al in range(1,2):
     print count,error
     count =0
     error=0
+
+
+
 print gyosyu_list
 np.random.seed(100)#シード値固定
 perm=[0]*(gyosyu+1)
@@ -138,16 +143,16 @@ perm=[0]*(gyosyu+1)
 
 up=[]
 upp=0
-for g in range(gyosyu+1):
+for g in range(gyosyu+datasu):
     up.append(upp)
     upp=upp+gyosyu_list[g]
 
 
-for pe in range(gyosyu+1):#各魚種のデータ数に応じた乱数作成
+for pe in range(gyosyu+datasu):#各魚種のデータ数に応じた乱数作成
 #    perm[pe] = np.random.permutation(gyosyu_list[pe])
     perm[pe] = np.arange(gyosyu_list[pe])
 
-for al in range(gyosyu+1):#データを8:２に分けてる
+for al in range(gyosyu+datasu):#データを8:２に分けてる
     indeces = [int(perm[al].size*n) for n in [0.6,0.6+0.2]]
     train, val,train1 = np.split(perm[al], indeces)
     for i,tra in enumerate(train):
@@ -243,7 +248,7 @@ fp2.close()
 
         # CPU環境でも学習済みモデルを読み込めるようにCPUに移してからダンプ
 model.to_cpu()
-cPickle.dump(model, open("model.pkl", "wb"), -1)
+cPickle.dump(model, open("ikahenkoumodel.pkl", "wb"), -1)
 
 '''
 if __name__ == "__main__":
